@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEDrop</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <div class="titlebar">
+      <div class="drag"></div>
+      <div class="win-controls" id="winControls">
+        <button class="wbtn close" id="btnClose" title="Close">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1L9 9M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button class="wbtn min" id="btnMin" title="Minimise">
+          <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="glow-orb"></div>
+
+    <div class="content">
+
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="1" y="1" width="20" height="20" rx="6" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 6v10M11 16l-4-4M11 16l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="brand-name">AEDrop</span>
+      </div>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="dz-inner">
+          <div class="dz-icon" id="dzIcon">
+            <svg class="icon-drop" width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M20 12v16M20 28l-6-6M20 28l6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="icon-spin" width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="17" stroke="currentColor" stroke-width="1.5" stroke-dasharray="26 80" stroke-linecap="round"/>
+            </svg>
+            <svg class="icon-check" width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5"/>
+              <path class="check-path" d="M12 20l6 6 10-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="icon-error" width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M14 14l12 12M26 14L14 26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <div class="dz-text">
+            <p class="dz-primary" id="dzPrimary">Drop your file or folder</p>
+            <p class="dz-secondary" id="dzSecondary">.aex &nbsp;·&nbsp; .jsx &nbsp;·&nbsp; .jsxbin &nbsp;·&nbsp; .zxp &nbsp;·&nbsp; .ffx &nbsp;·&nbsp; folders</p>
+          </div>
+        </div>
+
+        <div class="dz-progress-wrap" id="dzProgressWrap">
+          <div class="dz-progress-track">
+            <div class="dz-progress-bar" id="dzProgressBar"></div>
+          </div>
+          <p class="dz-progress-label" id="dzProgressLabel"></p>
+        </div>
+      </div>
+
+      <div class="version-picker" id="versionPicker">
+        <p class="picker-label">Multiple AE versions found — choose one:</p>
+        <div class="picker-list" id="pickerList"></div>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="rc-type" id="rcType"></div>
+        <div class="rc-name" id="rcName"></div>
+        <div class="rc-dest" id="rcDest"></div>
+      </div>
+
+      <button class="reset-btn" id="resetBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7a5 5 0 1 0 1-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M1 2v3h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Drop another
+      </button>
+
+    </div>
+
+    <div class="footer">
+      <button class="made-by" id="madeBy">Made by JX</button>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

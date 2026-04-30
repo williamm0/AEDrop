@@ -1,0 +1,50 @@
+{
+  "name": "aedrop",
+  "version": "1.0.0",
+  "productName": "AEDrop",
+  "description": "Drop-to-install for After Effects plugins, scripts, and extensions",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --arm64 --x64",
+    "build:win": "electron-builder --win --x64",
+    "build": "electron-builder --mac --win"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.aedrop.installer",
+    "productName": "AEDrop",
+    "files": ["src/**/*", "assets/**/*", "build/**/*"],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "identity": null,
+      "hardenedRuntime": false
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "dmg": {
+      "title": "AEDrop",
+      "window": { "width": 540, "height": 380 },
+      "contents": [
+        { "x": 140, "y": 180, "type": "file" },
+        { "x": 400, "y": 180, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

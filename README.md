@@ -1,6 +1,6 @@
 # AEDrop
 <img width="2500" height="1080" alt="1" src="https://github.com/user-attachments/assets/4307f7a1-6c93-40ba-bbbb-66a430e2de09" />
--
+---
 
 AEDrop is a small desktop installer for After Effects add-ons. Drop files or folders onto the window and it puts each one in the right Adobe folder for you.
 

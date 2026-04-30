@@ -1,39 +1,47 @@
 # AEDrop
 
-AEDrop is a small desktop installer for After Effects add-ons. Drop a plugin, script, preset, extension, or supported folder onto the window and it puts it in the right After Effects folder for you.
+AEDrop is a small desktop installer for After Effects add-ons. Drop files or folders onto the window and it puts each one in the right Adobe folder for you.
 
-It is built for the usual “where do I install this?” problem: `.aex`, `.jsx`, `.jsxbin`, `.zxp`, `.ffx`, CEP extension folders, script folders, and plugin bundles all have different destinations. AEDrop detects the file type, finds installed After Effects versions, and copies everything to the correct place.
+It is built for the usual “where do I install this?” problem: plugins, scripts, presets, extension bundles, motion graphics templates, LUTs, and add-on folders all have different destinations. AEDrop detects what you dropped, finds installed After Effects versions when needed, and copies everything to the correct place.
 
 ## What it does
 
+- Installs single files or multiple dropped items in one pass.
 - Detects installed After Effects versions on macOS and Windows.
-- Installs `.aex` plugins into `Plug-ins`.
-- Installs `.jsx` and `.jsxbin` scripts into `Scripts`.
+- Installs `.aex`, `.plugin`, `.bundle`, `.8bi`, and `.8bf` plugin files or bundles into `Plug-ins`.
+- Installs `.jsx`, `.jsxbin`, `.js`, and `.jsxinc` scripts into `Scripts`.
 - Sends ScriptUI panels to `Scripts/ScriptUI Panels`.
 - Extracts `.zxp` CEP extensions into the Adobe CEP extensions folder.
-- Copies CEP extension folders that already include `CSXS/manifest.xml`.
+- Copies CEP extension folders that include `CSXS/manifest.xml`.
 - Installs `.ffx` animation presets into `Presets`.
+- Installs `.mogrt` motion graphics templates into Adobe’s common Motion Graphics Templates folder.
+- Installs `.cube`, `.look`, and `.3dl` LUT files into Adobe’s common Creative LUTs folder.
+- Scans dropped folders so plugin bundles, preset packs, script packs, LUT packs, and template folders are recognised.
 - Lets you choose the target version when more than one After Effects version is installed.
 - Asks for admin permission only when the destination needs it.
 
 ## Why
 
-After Effects add-ons are still distributed in a mix of formats, and the install instructions are often different for every download. AEDrop keeps that process simple: open it, drop the file, pick a version if needed, done.
+After Effects add-ons are still distributed in a mix of formats, and the install instructions are often different for every download. AEDrop keeps that process simple: open it, drop the files, pick a version if needed, done.
 
 ## Supported files
 
 | Type | Installed to |
 | --- | --- |
-| `.aex` | After Effects `Plug-ins` |
-| Plugin folders | After Effects `Plug-ins` |
-| `.jsx`, `.jsxbin` | After Effects `Scripts` |
+| `.aex`, `.plugin`, `.bundle`, `.8bi`, `.8bf` | After Effects `Plug-ins` |
+| Plugin folders and bundles | After Effects `Plug-ins` |
+| `.jsx`, `.jsxbin`, `.js`, `.jsxinc` | After Effects `Scripts` |
 | ScriptUI panels | `Scripts/ScriptUI Panels` |
 | Script folders | After Effects `Scripts` |
 | `.zxp` | Adobe CEP `extensions` |
 | CEP extension folders | Adobe CEP `extensions` |
 | `.ffx` | After Effects `Presets` |
+| Preset folders | After Effects `Presets` |
+| `.mogrt` | Adobe Common `Motion Graphics Templates` |
+| `.cube`, `.look`, `.3dl` | Adobe Common `LUTs/Creative` |
+| LUT folders | Adobe Common `LUTs/Creative` |
 
-## [Download](https://github.com/williamm0/AEDrop/releases/tag/INSTALLERS)
+## Download
 
 Installers are built for:
 
@@ -74,6 +82,7 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:win
 - Windows builds request administrator privileges through the installer.
 - macOS only asks for elevation when copying into a protected After Effects folder.
 - `.zxp` extraction uses the system `unzip` command on macOS and PowerShell `Expand-Archive` on Windows.
+- Batch installs stop if an unsupported item is dropped, so nothing gets half-installed by mistake.
 
 ## Made by
 

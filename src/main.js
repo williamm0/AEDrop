@@ -88,6 +88,41 @@ function findAEInstallations() {
   return results.sort((a, b) => b.name.localeCompare(a.name))
 }
 
+const pluginExts = new Set(['.aex', '.plugin', '.bundle', '.8bi', '.8bf'])
+const scriptExts = new Set(['.jsx', '.jsxbin', '.js', '.jsxinc'])
+const presetExts = new Set(['.ffx'])
+const motionTemplateExts = new Set(['.mogrt'])
+const lutExts = new Set(['.cube', '.look', '.3dl'])
+
+function hasExt(filePath, exts) {
+  return exts.has(path.extname(filePath).toLowerCase())
+}
+
+function scanDirectory(dir, maxDepth = 4) {
+  const found = []
+
+  function walk(current, depth) {
+    if (depth > maxDepth || found.length > 500) return
+    let entries = []
+    try {
+      entries = fs.readdirSync(current)
+    } catch {
+      return
+    }
+
+    for (const entry of entries) {
+      const full = path.join(current, entry)
+      found.push(full)
+      try {
+        if (fs.statSync(full).isDirectory()) walk(full, depth + 1)
+      } catch {}
+    }
+  }
+
+  walk(dir, 0)
+  return found
+}
+
 function detectFileType(filePath) {
   let stat
   try {
@@ -101,17 +136,23 @@ function detectFileType(filePath) {
   const base = path.basename(filePath, ext).toLowerCase()
 
   if (!isDir) {
-    if (ext === '.aex') return { type: 'plugin', name: path.basename(filePath) }
+    if (hasExt(filePath, pluginExts)) return { type: 'plugin', name: path.basename(filePath) }
 
-    if (ext === '.jsx' || ext === '.jsxbin') {
+    if (hasExt(filePath, scriptExts)) {
       const isPanel = /panel|ui\b/.test(base)
       return { type: isPanel ? 'scriptui' : 'script', name: path.basename(filePath) }
     }
 
     if (ext === '.zxp') return { type: 'extension', name: path.basename(filePath) }
-    if (ext === '.ffx') return { type: 'preset', name: path.basename(filePath) }
+    if (hasExt(filePath, presetExts)) return { type: 'preset', name: path.basename(filePath) }
+    if (hasExt(filePath, motionTemplateExts)) return { type: 'motion-template', name: path.basename(filePath) }
+    if (hasExt(filePath, lutExts)) return { type: 'lut', name: path.basename(filePath) }
 
     return { type: 'unknown', name: path.basename(filePath) }
+  }
+
+  if (hasExt(filePath, pluginExts)) {
+    return { type: 'plugin-bundle', name: path.basename(filePath) }
   }
 
   try {
@@ -119,18 +160,30 @@ function detectFileType(filePath) {
       return { type: 'extension-folder', name: path.basename(filePath) }
     }
 
-    const entries = fs.readdirSync(filePath)
+    const entries = scanDirectory(filePath)
 
-    if (entries.some(e => /\.aex$/i.test(e))) {
+    if (entries.some(e => hasExt(e, pluginExts))) {
       return { type: 'plugin-bundle', name: path.basename(filePath) }
     }
 
-    if (entries.some(e => /\.(jsx|jsxbin)$/i.test(e))) {
-      const hasPanel = entries.some(e => /panel/i.test(e))
+    if (entries.some(e => hasExt(e, scriptExts))) {
+      const hasPanel = entries.some(e => /panel|scriptui/i.test(e))
       return {
         type: hasPanel ? 'scriptui-folder' : 'script-folder',
         name: path.basename(filePath),
       }
+    }
+
+    if (entries.some(e => hasExt(e, presetExts))) {
+      return { type: 'preset-folder', name: path.basename(filePath) }
+    }
+
+    if (entries.some(e => hasExt(e, motionTemplateExts))) {
+      return { type: 'motion-template-folder', name: path.basename(filePath) }
+    }
+
+    if (entries.some(e => hasExt(e, lutExts))) {
+      return { type: 'lut-folder', name: path.basename(filePath) }
     }
   } catch {}
 
@@ -161,6 +214,20 @@ function cepExtensionsDir() {
     return path.join(os.homedir(), 'Library', 'Application Support', 'Adobe', 'CEP', 'extensions')
   }
   return path.join(process.env.APPDATA || '', 'Adobe', 'CEP', 'extensions')
+}
+
+function motionGraphicsTemplatesDir() {
+  if (process.platform === 'darwin') {
+    return path.join(os.homedir(), 'Library', 'Application Support', 'Adobe', 'Common', 'Motion Graphics Templates')
+  }
+  return path.join(process.env.APPDATA || '', 'Adobe', 'Common', 'Motion Graphics Templates')
+}
+
+function lutsDir() {
+  if (process.platform === 'darwin') {
+    return path.join(os.homedir(), 'Library', 'Application Support', 'Adobe', 'Common', 'LUTs', 'Creative')
+  }
+  return path.join(process.env.APPDATA || '', 'Adobe', 'Common', 'LUTs', 'Creative')
 }
 
 function copyRecursive(src, dest) {
@@ -282,6 +349,16 @@ async function runInstall(filePath, detection, aePath) {
     safeCopy(filePath, path.join(cep, name))
   } else if (type === 'preset') {
     safeCopy(filePath, path.join(presetsDir(aePath), name))
+  } else if (type === 'preset-folder') {
+    safeCopy(filePath, path.join(presetsDir(aePath), name))
+  } else if (type === 'motion-template') {
+    safeCopy(filePath, path.join(motionGraphicsTemplatesDir(), name))
+  } else if (type === 'motion-template-folder') {
+    safeCopy(filePath, path.join(motionGraphicsTemplatesDir(), name))
+  } else if (type === 'lut') {
+    safeCopy(filePath, path.join(lutsDir(), name))
+  } else if (type === 'lut-folder') {
+    safeCopy(filePath, path.join(lutsDir(), name))
   } else {
     throw new Error('Unsupported file type')
   }

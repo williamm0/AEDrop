@@ -13,45 +13,76 @@ const btnMin = document.getElementById('btnMin')
 const madeBy = document.getElementById('madeBy')
 
 let aeVersions = []
-let pendingDetection = null
-let pendingPath = null
+let pendingItems = []
+
+const supportedText = '.aex · .plugin · .jsx · .zxp · .ffx · .mogrt · LUTs · folders'
 
 const typeLabels = {
-  plugin:            'After Effects Plugin',
-  'plugin-bundle':   'Plugin Bundle',
-  script:            'After Effects Script',
-  scriptui:          'ScriptUI Panel',
-  'script-folder':   'Script Collection',
-  'scriptui-folder': 'ScriptUI Panel Folder',
-  extension:         'CEP Extension',
-  'extension-folder':'CEP Extension',
-  preset:            'Animation Preset',
+  plugin:                  'After Effects Plugin',
+  'plugin-bundle':         'Plugin Bundle',
+  script:                  'After Effects Script',
+  scriptui:                'ScriptUI Panel',
+  'script-folder':         'Script Collection',
+  'scriptui-folder':       'ScriptUI Panel Folder',
+  extension:               'CEP Extension',
+  'extension-folder':      'CEP Extension',
+  preset:                  'Animation Preset',
+  'preset-folder':         'Preset Folder',
+  'motion-template':       'Motion Graphics Template',
+  'motion-template-folder':'Motion Graphics Template Folder',
+  lut:                     'LUT',
+  'lut-folder':            'LUT Folder',
 }
 
 const destLabels = {
-  plugin:            'Plug-ins/',
-  'plugin-bundle':   'Plug-ins/',
-  script:            'Scripts/',
-  scriptui:          'Scripts/ScriptUI Panels/',
-  'script-folder':   'Scripts/',
-  'scriptui-folder': 'Scripts/ScriptUI Panels/',
-  extension:         'CEP/extensions/',
-  'extension-folder':'CEP/extensions/',
-  preset:            'Presets/',
+  plugin:                  'Plug-ins/',
+  'plugin-bundle':         'Plug-ins/',
+  script:                  'Scripts/',
+  scriptui:                'Scripts/ScriptUI Panels/',
+  'script-folder':         'Scripts/',
+  'scriptui-folder':       'Scripts/ScriptUI Panels/',
+  extension:               'CEP/extensions/',
+  'extension-folder':      'CEP/extensions/',
+  preset:                  'Presets/',
+  'preset-folder':         'Presets/',
+  'motion-template':       'Motion Graphics Templates/',
+  'motion-template-folder':'Motion Graphics Templates/',
+  lut:                     'Common/LUTs/Creative/',
+  'lut-folder':            'Common/LUTs/Creative/',
 }
 
 function setState(s) {
   root.dataset.state = s
 }
 
-function isCEPType(type) {
-  return type === 'extension' || type === 'extension-folder'
+function needsAEVersion(type) {
+  return ![
+    'extension',
+    'extension-folder',
+    'motion-template',
+    'motion-template-folder',
+    'lut',
+    'lut-folder',
+  ].includes(type)
 }
 
-function setCard(detection) {
-  rcType.textContent = typeLabels[detection.type] || 'Unknown'
-  rcName.textContent = detection.name
-  rcDest.textContent = '→ ' + (destLabels[detection.type] || '?')
+function needsAESelection(items) {
+  return items.some(item => needsAEVersion(item.detection.type))
+}
+
+function setCardForItems(items) {
+  if (items.length === 1) {
+    const detection = items[0].detection
+    rcType.textContent = typeLabels[detection.type] || 'Unknown'
+    rcName.textContent = detection.name
+    rcDest.textContent = '→ ' + (destLabels[detection.type] || '?')
+    return
+  }
+
+  const destinations = new Set(items.map(item => destLabels[item.detection.type] || '?'))
+  rcType.textContent = 'Batch Install'
+  rcName.textContent = `${items.length} items ready`
+  rcDest.textContent = destinations.size === 1 ? `→ ${Array.from(destinations)[0]}` : '→ Multiple destinations'
 }
 
 function setProgress(pct, label) {
@@ -74,50 +105,75 @@ async function runInstall(aePath) {
   setState('installing')
   setProgress(0, '')
 
-  const result = await window.ae.install({
-    filePath: pendingPath,
-    detection: pendingDetection,
-    aePath: aePath || null,
-  })
+  let installed = 0
 
-  if (result.success) {
-    setProgress(100, 'Installed')
-    dzPrimary.textContent = 'Installed successfully'
-    rcType.textContent = typeLabels[pendingDetection.type] || 'Installed'
-    setState('success')
-  } else {
-    dzPrimary.textContent = 'Installation failed'
-    dzSecondary.textContent = result.error || 'Something went wrong'
-    rcType.textContent = 'Error'
-    rcName.textContent = result.error || 'Unknown error'
-    rcDest.textContent = ''
-    setState('error')
+  for (const item of pendingItems) {
+    const label = pendingItems.length === 1 ? 'Installing...' : `Installing ${installed + 1} of ${pendingItems.length}`
+    dzPrimary.textContent = label
+    rcType.textContent = typeLabels[item.detection.type] || 'Installing'
+    rcName.textContent = item.detection.name
+    rcDest.textContent = '→ ' + (destLabels[item.detection.type] || '?')
+
+    const result = await window.ae.install({
+      filePath: item.filePath,
+      detection: item.detection,
+      aePath: needsAEVersion(item.detection.type) ? aePath : null,
+    })
+
+    if (!result.success) {
+      dzPrimary.textContent = 'Installation failed'
+      dzSecondary.textContent = result.error || 'Something went wrong'
+      rcType.textContent = 'Error'
+      rcName.textContent = item.detection.name
+      rcDest.textContent = result.error || ''
+      setState('error')
+      return
+    }
+
+    installed += 1
   }
+
+  setProgress(100, 'Installed')
+  dzPrimary.textContent = installed === 1 ? 'Installed successfully' : `Installed ${installed} items`
+  dzSecondary.textContent = ''
+  rcType.textContent = installed === 1 ? (typeLabels[pendingItems[0].detection.type] || 'Installed') : 'Batch Complete'
+  rcName.textContent = installed === 1 ? pendingItems[0].detection.name : `${installed} items installed`
+  rcDest.textContent = ''
+  setState('success')
 }
 
-async function handleDrop(filePath) {
+async function handleDrop(filePaths) {
   setState('detecting')
   setProgress(0, 'Detecting...')
-  dzPrimary.textContent = 'Detecting...'
+  dzPrimary.textContent = filePaths.length === 1 ? 'Detecting...' : `Detecting ${filePaths.length} items...`
   dzSecondary.textContent = ''
 
-  const detection = await window.ae.detect(filePath)
+  const items = []
+  const unsupported = []
 
-  if (!detection || detection.type === 'unknown') {
+  for (const filePath of filePaths) {
+    const detection = await window.ae.detect(filePath)
+    if (!detection || detection.type === 'unknown') {
+      unsupported.push(detection ? detection.name : filePath.split('/').pop())
+    } else {
+      items.push({ filePath, detection })
+    }
+  }
+
+  if (unsupported.length > 0) {
     dzPrimary.textContent = 'Not recognised'
-    dzSecondary.textContent = 'Supports .aex · .jsx · .jsxbin · .zxp · .ffx · folders'
+    dzSecondary.textContent = `Unsupported: ${unsupported.slice(0, 3).join(', ')}${unsupported.length > 3 ? '…' : ''}`
     rcType.textContent = 'Unsupported'
-    rcName.textContent = detection ? detection.name : filePath.split('/').pop()
+    rcName.textContent = supportedText
     rcDest.textContent = ''
     setState('error')
     return
   }
 
-  pendingDetection = detection
-  pendingPath = filePath
-  setCard(detection)
+  pendingItems = items
+  setCardForItems(items)
 
-  if (isCEPType(detection.type)) {
+  if (!needsAESelection(items)) {
     await runInstall(null)
     return
   }
@@ -138,7 +194,7 @@ async function handleDrop(filePath) {
   }
 
   dzPrimary.textContent = 'Choose a version'
-  dzSecondary.textContent = ''
+  dzSecondary.textContent = items.length === 1 ? '' : `${items.length} items ready to install`
   buildPicker(aeVersions, async (v) => {
     await runInstall(v.path)
   })
@@ -146,11 +202,10 @@ async function handleDrop(filePath) {
 }
 
 function reset() {
-  pendingDetection = null
-  pendingPath = null
+  pendingItems = []
   setProgress(0, '')
-  dzPrimary.textContent = 'Drop your file or folder'
-  dzSecondary.textContent = '.aex · .jsx · .jsxbin · .zxp · .ffx · folders'
+  dzPrimary.textContent = 'Drop files or folders'
+  dzSecondary.textContent = supportedText
   pickerList.innerHTML = ''
   setState('idle')
 }
@@ -174,7 +229,7 @@ document.addEventListener('drop', async (e) => {
   if (s !== 'idle' && s !== 'dragover') return
   const files = Array.from(e.dataTransfer.files)
   if (!files.length) return
-  await handleDrop(files[0].path)
+  await handleDrop(files.map(file => file.path))
 })
 
 resetBtn.addEventListener('click', reset)
@@ -191,6 +246,6 @@ if (window.ae.platform === 'darwin') {
 }
 
 ;(async () => {
-  setState('idle')
+  reset()
   aeVersions = await window.ae.getVersions()
 })()

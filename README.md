@@ -33,7 +33,7 @@ After Effects add-ons are still distributed in a mix of formats, and the install
 | CEP extension folders | Adobe CEP `extensions` |
 | `.ffx` | After Effects `Presets` |
 
-## Download
+## [Download](https://github.com/williamm0/AEDrop/releases/tag/INSTALLERS)
 
 Installers are built for:
 

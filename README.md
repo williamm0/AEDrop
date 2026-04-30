@@ -41,7 +41,7 @@ After Effects add-ons are still distributed in a mix of formats, and the install
 | `.cube`, `.look`, `.3dl` | Adobe Common `LUTs/Creative` |
 | LUT folders | Adobe Common `LUTs/Creative` |
 
-## Download
+## [Download](https://github.com/williamm0/AEDrop/releases/tag/INSTALLERS)
 
 Installers are built for:
 
